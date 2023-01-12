@@ -1,0 +1,126 @@
+---
+title: "A1_vlaminck_20180542"
+output: html_document
+date: "`r Sys.Date()`"
+---
+https://github.com/dvlaminck/BIOL432_Assignment1
+
+Setting working directory and uploading required packages
+```{r}
+setwd("/Users/darahvlaminck/BIOL432_Assignment1")
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+source("http://bit.ly/theme_pub")
+```
+
+R Script #1
+Description: Generates 4 vectors with random sampling for each of the required variables. Limb length and width were adjusted based on the species to give accurate measurements for all observations. Vectors were combined into a dataframe and exported to a CSV
+```{r dataGenerato}
+source('dataGenerato.R')
+```
+
+R Script #2
+Description: Upload the dataframe generated in the previous R script. Create a new column in the data to calculate the volume of the organism's leg using dplyr while maintaining the other columns.
+```{r volumeEstimato}
+source('volumeEstimato.R')
+```
+
+Viewing and analyzing the updated df
+```{r}
+print(measurements)
+head(measurements)
+summary(measurements)
+str(measurements)
+```
+
+Sorting the dataframe based on species:
+```{r}
+measurements2 <- measurements %>% arrange(species)
+measurements2
+```
+
+Sorting the dataframe based on observer:
+```{r}
+measurements2 <- measurements %>% arrange(observer)
+measurements2
+```
+
+Sorting the dataframe based on limb volume in ascending order:
+```{r}
+measurements2 <- measurements %>% arrange(Volume)
+measurements2
+```
+
+Calculating the average volume for each species:
+```{r}
+avgvolume <- measurements %>% #Starting piping sequence
+   group_by(species) %>% #Grouping the data by species
+   summarize(average_volume=mean(Volume)) #Determining the average volume for each species
+ print(avgvolume)
+```
+
+Calculating the number of observations for each species and observer:
+```{r}
+ measurements2 <- measurements %>%
+   group_by(species,observer) %>%
+   count("species")
+print(measurements2)
+```
+```{r}
+ measurements2 <- measurements %>%
+   group_by(species,observer) %>%
+   count("observer")
+print(measurements2)
+```
+
+Creating a single boxplot:
+```{r}
+VolumePlot <- ggplot(measurements) + geom_boxplot(aes(x=species, y=Volume, colour=species)) + ggtitle("Volume Comparison by Species") + labs(y="Volume" ~(Cm^3), x = "Species") + theme_pub()
+print(VolumePlot)
+```
+Figure 1: This figure shows the relationship between the different species and their average limb volume. The X axis represents the different species observed and the Y axis demosntrates their limb volume distrubution. Each species is coloured in a different colour. The coloured bar within each boxplot represents the mean limb volume for each species.Error bars for each species are calculated based on lower and upper confidence intervals.
+
+NOTE: I tried to mess around with the scale of this graph but I just picked such bad differences in the species that no scale changes are making this more pretty sorry 
+
+```{r}
+#Creating cats histogram
+catsfreq <- measurements %>% #Starting piping sequence
+  filter(species =="felis catus") %>% #Filtering data to include only cats
+  droplevels() #Dropping other
+
+catsplot<- ggplot() + geom_histogram(data=catsfreq, aes(x=Volume)) + xlab("Volume" ~(Cm^3)) + ylab("Count") + ggtitle("felis catus")
+
+#Creating dog histogram
+dogfreq <- measurements %>% #Starting piping sequence
+  filter(species =="canis lupus familiaris") %>% #Filtering data to include only dog
+  droplevels() #Dropping other
+
+dogplot<- ggplot() + geom_histogram(data=dogfreq, aes(x=Volume)) + xlab("Volume" ~(Cm^3)) + ylab("Count") + ggtitle("canis lupus familiaris")
+
+#Creating giraffe histogram
+giraffefreq <- measurements %>% #Starting piping sequence
+  filter(species =="giraffa camelopardalis") %>% #Filtering data to include only giraffes
+  droplevels() #Dropping other
+
+giraffeplot<- ggplot() + geom_histogram(data=giraffefreq, aes(x=Volume)) + xlab("Volume" ~(Cm^3)) + ylab("Count") + ggtitle("giraffa camelopardalis")
+
+#Creating horse histogram
+horsefreq <- measurements %>% #Starting piping sequence
+  filter(species =="equus caballus") %>% #Filtering data to include only horse
+  droplevels() #Dropping other
+
+horseplot<- ggplot() + geom_histogram(data=horsefreq, aes(x=Volume)) + xlab("Volume" ~(Cm^3)) + ylab("Count") + ggtitle("equus caballus")
+
+#Creating panther histogram
+pantherfreq <- measurements %>% #Starting piping sequence
+  filter(species =="panthera pardus") %>% #Filtering data to include only panther
+  droplevels() #Dropping other
+
+pantherplot<- ggplot() + geom_histogram(data=pantherfreq, aes(x=Volume)) + xlab("Volume" ~(Cm^3)) + ylab("Count") + ggtitle("panthera pardus")
+print(pantherplot)
+
+compplot <- plot_grid(catsplot, dogplot, giraffeplot, horseplot, pantherplot, nrow=2) #Combining plots together
+print(compplot)
+```
+Figure 2: This figure shows the observed volume frequency for each species. The X axis represents the volume in cm^3 and the Y axis demosntrates the number of times that this volume was observed in the sample. There is no normally distributed dataset for each of the species, rather there is a limited or skewed distribution for each species.
